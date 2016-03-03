@@ -46,7 +46,7 @@ public class ForecastFragment extends Fragment {
         ArrayList<String> weekForecast = new ArrayList<>(Arrays.asList(weatherData));
 
         mForecastAdapter =
-                new ArrayAdapter<String>(
+                new ArrayAdapter<>(
                         getActivity(),
                         R.layout.list_item_forecast,
                         R.id.list_item_forecast_textView,
@@ -99,19 +99,17 @@ public class ForecastFragment extends Fragment {
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
                 InputStream is = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (is == null) {
-                    forecastJsonStr = null;
-                }
+                StringBuilder stringBuilder = new StringBuilder();
+                if (is == null) return null;
                 reader = new BufferedReader(new InputStreamReader(is));
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
+                    stringBuilder.append(line).append("\n");
                 }
-                if (buffer.length() == 0) {
+                if (stringBuilder.length() == 0) {
                     forecastJsonStr = null;
                 }
-                forecastJsonStr = buffer.toString();
+                forecastJsonStr = stringBuilder.toString();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 forecastJsonStr = null;
