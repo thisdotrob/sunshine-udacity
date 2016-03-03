@@ -56,30 +56,40 @@ public class ForecastFragment extends Fragment {
 
         listView.setAdapter(mForecastAdapter);
 
-        Uri.Builder builder = new Uri.Builder();
-        builder.scheme("http")
-                .authority("api.openweathermap.org")
-                .appendPath("data")
-                .appendPath("2.5")
-                .appendPath("forecast")
-                .appendPath("daily")
-                .appendQueryParameter("q", "94043")
-                .appendQueryParameter("units", "metric")
-                .appendQueryParameter("cnt", "7")
-                .appendQueryParameter("appid", "cc94715e94287e49ed67f30b455b4761");
-        String urlStr = builder.build().toString();
+        String postcode = "94043";
 
-        new FetchWeatherTask().execute(urlStr);
+        new FetchWeatherTask().execute(postcode);
 
         return rootView;
     }
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String> {
 
+        private final String COUNT = "7";
+        private final String UNITS = "metric";
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+        private final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
 
         @Override
         protected String doInBackground(String... strings) {
+
+            String postcode = strings[0];
+
+            Uri.Builder builder = new Uri.Builder();
+
+            builder.scheme("http")
+                    .authority("api.openweathermap.org")
+                    .appendPath("data")
+                    .appendPath("2.5")
+                    .appendPath("forecast")
+                    .appendPath("daily")
+                    .appendQueryParameter("q", postcode)
+                    .appendQueryParameter("units", UNITS)
+                    .appendQueryParameter("cnt", COUNT)
+                    .appendQueryParameter("appid", APP_ID);
+
+            String urlStr = builder.build().toString();
+
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
             String forecastJsonStr = null;
