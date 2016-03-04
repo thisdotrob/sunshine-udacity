@@ -14,14 +14,20 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 public class ForecastFragment extends Fragment {
 
@@ -87,12 +93,40 @@ public class ForecastFragment extends Fragment {
         return rootView;
     }
 
-    private class FetchWeatherTask extends AsyncTask<String, Void, Void> {
+    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
-        @Override
-        protected Void doInBackground(String... params) {
+        private String[] parseWeatherData(String forecastJsonStr, int days) throws JSONException {
+            JSONObject forecastsJson = new JSONObject(forecastJsonStr);
+            JSONArray forecastsArray = forecastsJson.getJSONArray("list");
+            String[] weatherData = new String[days];
+            for(int i=0; i<days; i++) {
+                JSONObject forecastJson = forecastsArray.getJSONObject(i);
 
+                String weatherDescription = forecastJson.getJSONArray("weather")
+                        .getJSONObject(0)
+                        .getString("main");
+
+                JSONObject tempJson = forecastJson.getJSONObject("temp");
+
+                int tempMin = (int) Math.round(tempJson.getDouble("min"));
+                int tempMax = (int) Math.round(tempJson.getDouble("max"));
+
+                String highLowTemperature = String.format("%d / %d", tempMin, tempMax);
+
+                long unixSeconds = forecastJson.getLong("dt");
+                Date date = new Date(unixSeconds*1000L);
+                SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
+                String formattedDate = sdf.format(date);
+                String result = formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
+                weatherData[i] = result;
+            }
+
+            return weatherData;
+        }
+
+        @Override
+        protected String[] doInBackground(String... params) {
             if (params.length == 0) return null;
 
             HttpURLConnection urlConnection = null;
@@ -102,7 +136,7 @@ public class ForecastFragment extends Fragment {
 
             String postcode = params[0];
             String units = "metric";
-            String days = "7";
+            int days = 7;
             final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
 
             final String QUERY_PARAM = "q";
@@ -115,7 +149,7 @@ public class ForecastFragment extends Fragment {
                     .appendPath("data/2.5/forecast/daily")
                     .appendQueryParameter(QUERY_PARAM, postcode)
                     .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, days)
+                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
                     .appendQueryParameter(APPID_PARAM, APP_ID);
 
             String urlStr = uriBuilder.build().toString();
@@ -150,8 +184,20 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
-            Log.d(LOG_TAG, forecastJsonStr);
+            try {
+                return parseWeatherData(forecastJsonStr, days);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error ", e);
+            }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String[] strings) {
+            mForecastAdapter.clear();
+            for(String s: strings) mForecastAdapter.add(s);
+            mForecastAdapter.notifyDataSetChanged();
+            super.onPostExecute(strings);
         }
     }
 }
