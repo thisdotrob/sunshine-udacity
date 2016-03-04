@@ -97,32 +97,38 @@ public class ForecastFragment extends Fragment {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
         private String[] parseWeatherData(String forecastJsonStr, int days) throws JSONException {
-            JSONObject forecastsJson = new JSONObject(forecastJsonStr);
-            JSONArray forecastsArray = forecastsJson.getJSONArray("list");
-            String[] weatherData = new String[days];
+            String[] parsedWeatherData = new String[days];
+            JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
             for(int i=0; i<days; i++) {
-                JSONObject forecastJson = forecastsArray.getJSONObject(i);
-
-                String weatherDescription = forecastJson.getJSONArray("weather")
-                        .getJSONObject(0)
-                        .getString("main");
-
-                JSONObject tempJson = forecastJson.getJSONObject("temp");
-
-                int tempMin = (int) Math.round(tempJson.getDouble("min"));
-                int tempMax = (int) Math.round(tempJson.getDouble("max"));
-
-                String highLowTemperature = String.format("%d / %d", tempMin, tempMax);
-
-                long unixSeconds = forecastJson.getLong("dt");
-                Date date = new Date(unixSeconds*1000L);
-                SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
-                String formattedDate = sdf.format(date);
-                String result = formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
-                weatherData[i] = result;
+                JSONObject forecast = forecasts.getJSONObject(i);
+                parsedWeatherData[i] = parseForecast(forecast);
             }
+            return parsedWeatherData;
+        }
 
-            return weatherData;
+        private String parseForecast(JSONObject forecast) throws JSONException {
+            String weatherDescription = parseWeatherDescription(forecast);
+            String highLowTemperature = parseHighLowTemperature(forecast);
+            String formattedDate = parseFormattedDate(forecast);
+            return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
+        }
+
+        private String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
+            return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
+        }
+
+        private String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
+            JSONObject tempJson = forecastJson.getJSONObject("temp");
+            int tempMin = (int) Math.round(tempJson.getDouble("min"));
+            int tempMax = (int) Math.round(tempJson.getDouble("max"));
+            return String.format("%d / %d", tempMin, tempMax);
+        }
+
+        private String parseFormattedDate(JSONObject forecastJson) throws JSONException {
+            long unixSeconds = forecastJson.getLong("dt");
+            Date date = new Date(unixSeconds*1000L);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
+            return sdf.format(date);
         }
 
         @Override
