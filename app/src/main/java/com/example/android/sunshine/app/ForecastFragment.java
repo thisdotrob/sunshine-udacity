@@ -48,6 +48,7 @@ public class ForecastFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
+            new FetchWeatherTask().execute("94043");
             return true;
         }
 
@@ -83,63 +84,60 @@ public class ForecastFragment extends Fragment {
 
         listView.setAdapter(mForecastAdapter);
 
-        String postcode = "94043";
-
-        new FetchWeatherTask().execute(postcode);
-
         return rootView;
     }
 
-    private class FetchWeatherTask extends AsyncTask<String, Void, String> {
-
-        private final String COUNT = "7";
-        private final String UNITS = "metric";
+    private class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-        private final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
 
         @Override
-        protected String doInBackground(String... strings) {
+        protected Void doInBackground(String... params) {
 
-            String postcode = strings[0];
-
-            Uri.Builder builder = new Uri.Builder();
-
-            builder.scheme("http")
-                    .authority("api.openweathermap.org")
-                    .appendPath("data")
-                    .appendPath("2.5")
-                    .appendPath("forecast")
-                    .appendPath("daily")
-                    .appendQueryParameter("q", postcode)
-                    .appendQueryParameter("units", UNITS)
-                    .appendQueryParameter("cnt", COUNT)
-                    .appendQueryParameter("appid", APP_ID);
-
-            String urlStr = builder.build().toString();
+            if (params.length == 0) return null;
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
             String forecastJsonStr = null;
+            Uri.Builder uriBuilder = new Uri.Builder();
+
+            String postcode = params[0];
+            String units = "metric";
+            String days = "7";
+            final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
+
+            final String QUERY_PARAM = "q";
+            final String UNITS_PARAM = "units";
+            final String DAYS_PARAM = "cnt";
+            final String APPID_PARAM = "APPID";
+
+            uriBuilder.scheme("http")
+                    .authority("api.openweathermap.org")
+                    .appendPath("data/2.5/forecast/daily")
+                    .appendQueryParameter(QUERY_PARAM, postcode)
+                    .appendQueryParameter(UNITS_PARAM, units)
+                    .appendQueryParameter(DAYS_PARAM, days)
+                    .appendQueryParameter(APPID_PARAM, APP_ID);
+
+            String urlStr = uriBuilder.build().toString();
+
             try {
-                URL url = new URL(strings[0]);
+                URL url = new URL(urlStr);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
-                InputStream is = urlConnection.getInputStream();
+                InputStream inputStream = urlConnection.getInputStream();
                 StringBuilder stringBuilder = new StringBuilder();
-                if (is == null) return null;
-                reader = new BufferedReader(new InputStreamReader(is));
+                if (inputStream == null) return null;
+                reader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
                 while ((line = reader.readLine()) != null) {
                     stringBuilder.append(line).append("\n");
                 }
-                if (stringBuilder.length() == 0) {
-                    forecastJsonStr = null;
-                }
+                if (stringBuilder.length() == 0) return null;
                 forecastJsonStr = stringBuilder.toString();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
-                forecastJsonStr = null;
+                return null;
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
@@ -152,7 +150,8 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
-            return forecastJsonStr;
+            Log.d(LOG_TAG, forecastJsonStr);
+            return null;
         }
     }
 }
