@@ -52,7 +52,6 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
             new FetchWeatherTask().execute("94043");
             return true;
@@ -95,41 +94,6 @@ public class ForecastFragment extends Fragment {
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-
-        private String[] parseWeatherData(String forecastJsonStr, int days) throws JSONException {
-            String[] parsedWeatherData = new String[days];
-            JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
-            for(int i=0; i<days; i++) {
-                JSONObject forecast = forecasts.getJSONObject(i);
-                parsedWeatherData[i] = parseForecast(forecast);
-            }
-            return parsedWeatherData;
-        }
-
-        private String parseForecast(JSONObject forecast) throws JSONException {
-            String weatherDescription = parseWeatherDescription(forecast);
-            String highLowTemperature = parseHighLowTemperature(forecast);
-            String formattedDate = parseFormattedDate(forecast);
-            return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
-        }
-
-        private String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
-            return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
-        }
-
-        private String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
-            JSONObject tempJson = forecastJson.getJSONObject("temp");
-            int tempMin = (int) Math.round(tempJson.getDouble("min"));
-            int tempMax = (int) Math.round(tempJson.getDouble("max"));
-            return String.format("%d / %d", tempMin, tempMax);
-        }
-
-        private String parseFormattedDate(JSONObject forecastJson) throws JSONException {
-            long unixSeconds = forecastJson.getLong("dt");
-            Date date = new Date(unixSeconds*1000L);
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
-            return sdf.format(date);
-        }
 
         @Override
         protected String[] doInBackground(String... params) {
@@ -191,7 +155,7 @@ public class ForecastFragment extends Fragment {
                 }
             }
             try {
-                return parseWeatherData(forecastJsonStr, days);
+                return WeatherDataParser.parse(forecastJsonStr, days);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error ", e);
             }
@@ -206,4 +170,42 @@ public class ForecastFragment extends Fragment {
             super.onPostExecute(strings);
         }
     }
+
+    private static class WeatherDataParser {
+        private static String[] parse(String forecastJsonStr, int days) throws JSONException {
+            String[] parsedWeatherData = new String[days];
+            JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
+            for(int i=0; i<days; i++) {
+                JSONObject forecast = forecasts.getJSONObject(i);
+                parsedWeatherData[i] = parseSingleDayForecast(forecast);
+            }
+            return parsedWeatherData;
+        }
+
+        private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
+            String weatherDescription = parseWeatherDescription(forecast);
+            String highLowTemperature = parseHighLowTemperature(forecast);
+            String formattedDate = parseFormattedDate(forecast);
+            return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
+        }
+
+        private static String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
+            return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
+        }
+
+        private static String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
+            JSONObject tempJson = forecastJson.getJSONObject("temp");
+            int tempMin = (int) Math.round(tempJson.getDouble("min"));
+            int tempMax = (int) Math.round(tempJson.getDouble("max"));
+            return String.format("%d / %d", tempMin, tempMax);
+        }
+
+        private static String parseFormattedDate(JSONObject forecastJson) throws JSONException {
+            long unixSeconds = forecastJson.getLong("dt");
+            Date date = new Date(unixSeconds*1000L);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
+            return sdf.format(date);
+        }
+    }
+
 }
