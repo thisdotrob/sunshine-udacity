@@ -104,7 +104,6 @@ public class ForecastFragment extends Fragment {
         protected void onPostExecute(String[] strings) {
             mForecastAdapter.clear();
             for(String s: strings) mForecastAdapter.add(s);
-            mForecastAdapter.notifyDataSetChanged();
             super.onPostExecute(strings);
         }
     }
