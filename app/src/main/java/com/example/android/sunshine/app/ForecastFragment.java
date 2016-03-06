@@ -13,11 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,12 +94,36 @@ public class ForecastFragment extends Fragment {
         @Override
         protected String[] doInBackground(String... params) {
             if (params.length == 0) return null;
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            String forecastJsonStr = null;
             int days = 7;
             String postcode = params[0];
             String urlStr = OpenWeatherApiUrlBuilder.build(postcode, days);
+            String forecastJsonStr = ForecastJsonRetriever.retrieveJsonStr(urlStr);
+            try {
+                String[] parsedWeatherData;
+                parsedWeatherData = WeatherDataParser.parse(forecastJsonStr, days);
+                return parsedWeatherData;
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error ", e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String[] strings) {
+            mForecastAdapter.clear();
+            for(String s: strings) mForecastAdapter.add(s);
+            mForecastAdapter.notifyDataSetChanged();
+            super.onPostExecute(strings);
+        }
+    }
+
+    private static class ForecastJsonRetriever {
+        private static final String LOG_TAG = ForecastJsonRetriever.class.getSimpleName();
+
+        private static String retrieveJsonStr(String urlStr) {
+            String forecastJsonStr = null;
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
             try {
                 URL url = new URL(urlStr);
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -132,20 +154,7 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
-            try {
-                return WeatherDataParser.parse(forecastJsonStr, days);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error ", e);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String[] strings) {
-            mForecastAdapter.clear();
-            for(String s: strings) mForecastAdapter.add(s);
-            mForecastAdapter.notifyDataSetChanged();
-            super.onPostExecute(strings);
+            return forecastJsonStr;
         }
     }
 
