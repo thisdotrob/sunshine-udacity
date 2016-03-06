@@ -96,32 +96,12 @@ public class ForecastFragment extends Fragment {
         @Override
         protected String[] doInBackground(String... params) {
             if (params.length == 0) return null;
-
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
             String forecastJsonStr = null;
-            Uri.Builder uriBuilder = new Uri.Builder();
-
-            String postcode = params[0];
-            String units = "metric";
             int days = 7;
-            final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
-
-            final String QUERY_PARAM = "q";
-            final String UNITS_PARAM = "units";
-            final String DAYS_PARAM = "cnt";
-            final String APPID_PARAM = "APPID";
-
-            uriBuilder.scheme("http")
-                    .authority("api.openweathermap.org")
-                    .appendPath("data/2.5/forecast/daily")
-                    .appendQueryParameter(QUERY_PARAM, postcode)
-                    .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
-                    .appendQueryParameter(APPID_PARAM, APP_ID);
-
-            String urlStr = uriBuilder.build().toString();
-
+            String postcode = params[0];
+            String urlStr = OpenWeatherApiUrlBuilder.build(postcode, days);
             try {
                 URL url = new URL(urlStr);
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -166,6 +146,27 @@ public class ForecastFragment extends Fragment {
             for(String s: strings) mForecastAdapter.add(s);
             mForecastAdapter.notifyDataSetChanged();
             super.onPostExecute(strings);
+        }
+    }
+
+    private static class OpenWeatherApiUrlBuilder {
+        static final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
+        static final String QUERY_PARAM = "q";
+        static final String UNITS_PARAM = "units";
+        static final String DAYS_PARAM = "cnt";
+        static final String APPID_PARAM = "APPID";
+
+        private static String build(String postcodeStr, int days) {
+            Uri.Builder uriBuilder = new Uri.Builder();
+            String units = "metric";
+            uriBuilder.scheme("http")
+                    .authority("api.openweathermap.org")
+                    .appendPath("data/2.5/forecast/daily")
+                    .appendQueryParameter(QUERY_PARAM, postcodeStr)
+                    .appendQueryParameter(UNITS_PARAM, units)
+                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
+                    .appendQueryParameter(APPID_PARAM, APP_ID);
+            return uriBuilder.build().toString();
         }
     }
 
