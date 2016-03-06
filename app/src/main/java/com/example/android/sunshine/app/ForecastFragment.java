@@ -89,7 +89,6 @@ public class ForecastFragment extends Fragment {
     }
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-        private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
         @Override
         protected String[] doInBackground(String... params) {
@@ -98,14 +97,7 @@ public class ForecastFragment extends Fragment {
             String postcode = params[0];
             String urlStr = OpenWeatherApiUrlBuilder.build(postcode, days);
             String forecastJsonStr = ForecastJsonRetriever.retrieveJsonStr(urlStr);
-            try {
-                String[] parsedWeatherData;
-                parsedWeatherData = WeatherDataParser.parse(forecastJsonStr, days);
-                return parsedWeatherData;
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error ", e);
-            }
-            return null;
+            return WeatherDataParser.parse(forecastJsonStr, days);
         }
 
         @Override
@@ -114,6 +106,27 @@ public class ForecastFragment extends Fragment {
             for(String s: strings) mForecastAdapter.add(s);
             mForecastAdapter.notifyDataSetChanged();
             super.onPostExecute(strings);
+        }
+    }
+
+    private static class OpenWeatherApiUrlBuilder {
+        static final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
+        static final String QUERY_PARAM = "q";
+        static final String UNITS_PARAM = "units";
+        static final String DAYS_PARAM = "cnt";
+        static final String APPID_PARAM = "APPID";
+
+        private static String build(String postcodeStr, int days) {
+            Uri.Builder uriBuilder = new Uri.Builder();
+            String units = "metric";
+            uriBuilder.scheme("http")
+                    .authority("api.openweathermap.org")
+                    .appendPath("data/2.5/forecast/daily")
+                    .appendQueryParameter(QUERY_PARAM, postcodeStr)
+                    .appendQueryParameter(UNITS_PARAM, units)
+                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
+                    .appendQueryParameter(APPID_PARAM, APP_ID);
+            return uriBuilder.build().toString();
         }
     }
 
@@ -158,36 +171,22 @@ public class ForecastFragment extends Fragment {
         }
     }
 
-    private static class OpenWeatherApiUrlBuilder {
-        static final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
-        static final String QUERY_PARAM = "q";
-        static final String UNITS_PARAM = "units";
-        static final String DAYS_PARAM = "cnt";
-        static final String APPID_PARAM = "APPID";
-
-        private static String build(String postcodeStr, int days) {
-            Uri.Builder uriBuilder = new Uri.Builder();
-            String units = "metric";
-            uriBuilder.scheme("http")
-                    .authority("api.openweathermap.org")
-                    .appendPath("data/2.5/forecast/daily")
-                    .appendQueryParameter(QUERY_PARAM, postcodeStr)
-                    .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
-                    .appendQueryParameter(APPID_PARAM, APP_ID);
-            return uriBuilder.build().toString();
-        }
-    }
-
     private static class WeatherDataParser {
-        private static String[] parse(String forecastJsonStr, int days) throws JSONException {
-            String[] parsedWeatherData = new String[days];
-            JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
-            for(int i=0; i<days; i++) {
-                JSONObject forecast = forecasts.getJSONObject(i);
-                parsedWeatherData[i] = parseSingleDayForecast(forecast);
+        private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
+
+        private static String[] parse(String forecastJsonStr, int days) {
+            try {
+                String[] parsedWeatherData = new String[days];
+                JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
+                for(int i=0; i<days; i++) {
+                    JSONObject forecast = forecasts.getJSONObject(i);
+                    parsedWeatherData[i] = parseSingleDayForecast(forecast);
+                }
+                return parsedWeatherData;
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error ", e);
             }
-            return parsedWeatherData;
+            return null;
         }
 
         private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
