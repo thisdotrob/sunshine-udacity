@@ -65,7 +65,12 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        initializeForecastAdapter(listView);
+        return rootView;
+    }
 
+    private void initializeForecastAdapter(ListView listView) {
         String[] weatherData = new String[] {
                 "Today - Sunny - 88/63",
                 "Tomorrow - Foggy - 70/46",
@@ -75,21 +80,14 @@ public class ForecastFragment extends Fragment {
                 "Sat - Sunny - 76/68",
                 "Sun - Asteroids - 99/00"
         };
-
         ArrayList<String> weekForecast = new ArrayList<>(Arrays.asList(weatherData));
-
         mForecastAdapter =
                 new ArrayAdapter<>(
                         getActivity(),
                         R.layout.list_item_forecast,
                         R.id.list_item_forecast_textView,
                         weekForecast);
-
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-
         listView.setAdapter(mForecastAdapter);
-
-        return rootView;
     }
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
