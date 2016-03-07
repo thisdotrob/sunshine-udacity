@@ -1,5 +1,6 @@
 package com.example.android.sunshine.app;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -32,6 +33,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 public class ForecastFragment extends Fragment {
+
+    public final static String EXTRA_MESSAGE = "com.mycompany.myfirstapp.MESSAGE";
 
     private ArrayAdapter<String> mForecastAdapter;
 
@@ -77,6 +80,10 @@ public class ForecastFragment extends Fragment {
                 int duration = Toast.LENGTH_SHORT;
                 Toast toast = Toast.makeText(getContext(), text, duration);
                 toast.show();
+
+                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+                detailIntent.putExtra(EXTRA_MESSAGE, text);
+                startActivity(detailIntent);
             }
         };
         listView.setOnItemClickListener(clickListener);

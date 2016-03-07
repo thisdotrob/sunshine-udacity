@@ -19,8 +19,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ForecastDetailActivity"
-            android:label="@string/title_activity_forecast_detail"
+            android:name=".DetailActivity"
+            android:label="@string/title_activity_detail"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
