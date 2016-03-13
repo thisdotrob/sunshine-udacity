@@ -16,11 +16,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,13 +32,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
-public class ForecastFragment extends Fragment {
+public class MainFragment extends Fragment {
 
     public final static String EXTRA_MESSAGE = "com.mycompany.myfirstapp.MESSAGE";
 
     private ArrayAdapter<String> mForecastAdapter;
 
-    public ForecastFragment() {
+    public MainFragment() {
     }
 
     @Override
@@ -77,10 +77,6 @@ public class ForecastFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView textView = (TextView) view;
                 CharSequence text = textView.getText();
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(getContext(), text, duration);
-                toast.show();
-
                 Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
                 detailIntent.putExtra(EXTRA_MESSAGE, text);
                 startActivity(detailIntent);
