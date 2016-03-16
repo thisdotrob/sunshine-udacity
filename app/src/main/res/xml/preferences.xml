@@ -1,14 +1,11 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:title="Main settings category">
-
-        <CheckBoxPreference
-            android:key="checkbox_preference"
-            android:title="Preference title"
-            android:summary="Preference detail summary" />
-
-    </PreferenceCategory>
+    <EditTextPreference
+        android:title="@string/pref_location_label"
+        android:key="@string/pref_location_key"
+        android:defaultValue="@string/pref_location_default"
+        android:inputType="text"
+        android:singleLine="true" />
 
 </PreferenceScreen>
