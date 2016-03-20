@@ -31,10 +31,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 
 public class MainFragment extends Fragment {
 
-    public final static String EXTRA_MESSAGE = "com.mycompany.myfirstapp.MESSAGE";
+    public final static String EXTRA_MESSAGE = "com.example.android.sunshine.app.MESSAGE";
 
     private ArrayAdapter<String> mForecastAdapter;
 
@@ -58,6 +59,8 @@ public class MainFragment extends Fragment {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
+            int mode = getContext().MODE_PRIVATE;
+            Map<String, ?> preferences = getActivity().getPreferences(mode).getAll();
             new FetchWeatherTask().execute("94043");
             return true;
         }
