@@ -1,9 +1,11 @@
 package com.example.android.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,7 +33,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 public class MainFragment extends Fragment {
 
@@ -59,9 +60,10 @@ public class MainFragment extends Fragment {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            int mode = getContext().MODE_PRIVATE;
-            Map<String, ?> preferences = getActivity().getPreferences(mode).getAll();
-            new FetchWeatherTask().execute("94043");
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            String defaultLocation = getContext().getString(R.string.pref_location_default);
+            String location = prefs.getString("location", defaultLocation);
+            new FetchWeatherTask().execute(location);
             return true;
         }
 
@@ -196,17 +198,34 @@ public class MainFragment extends Fragment {
 
         private static String[] parse(String forecastJsonStr, int days) {
             try {
-                String[] parsedWeatherData = new String[days];
-                JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
-                for(int i=0; i<days; i++) {
-                    JSONObject forecast = forecasts.getJSONObject(i);
-                    parsedWeatherData[i] = parseSingleDayForecast(forecast);
+                boolean locationNotFound = locationNotFound(forecastJsonStr);
+                if (locationNotFound) {
+                    return new String[] { "Location not found" };
+                } else {
+                    String[] parsedWeatherData = new String[days];
+                    JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
+                    for(int i=0; i<days; i++) {
+                        JSONObject forecast = forecasts.getJSONObject(i);
+                        parsedWeatherData[i] = parseSingleDayForecast(forecast);
+                    }
+                    return parsedWeatherData;
                 }
-                return parsedWeatherData;
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error ", e);
             }
             return null;
+        }
+
+        private static boolean locationNotFound(String forecastJsonStr) {
+            try {
+                JSONObject jsonObject = new JSONObject(forecastJsonStr);
+                String cod = (String) jsonObject.get("cod");
+                return cod.equals("404");
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error ", e);
+                return false;
+            }
+
         }
 
         private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
