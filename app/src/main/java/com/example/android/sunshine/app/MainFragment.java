@@ -103,22 +103,12 @@ public class MainFragment extends Fragment {
     }
 
     private void initializeForecastAdapter(ListView listView) {
-        String[] weatherData = new String[] {
-                "Today - Sunny - 88/63",
-                "Tomorrow - Foggy - 70/46",
-                "Weds - Cloudy - 72/63",
-                "Thurs - Rainy - 64/51",
-                "Fri - Foggy - 70/46",
-                "Sat - Sunny - 76/68",
-                "Sun - Asteroids - 99/00"
-        };
-        ArrayList<String> weekForecast = new ArrayList<>(Arrays.asList(weatherData));
         mForecastAdapter =
                 new ArrayAdapter<>(
                         getActivity(),
                         R.layout.list_item_forecast,
                         R.id.list_item_forecast_textView,
-                        weekForecast);
+                        new ArrayList<String>());
         listView.setAdapter(mForecastAdapter);
     }
 
