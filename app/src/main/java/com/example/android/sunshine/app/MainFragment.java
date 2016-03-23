@@ -50,6 +50,12 @@ public class MainFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.forecastfragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
@@ -60,10 +66,7 @@ public class MainFragment extends Fragment {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String defaultLocation = getContext().getString(R.string.pref_location_default);
-            String location = prefs.getString("location", defaultLocation);
-            new FetchWeatherTask().execute(location);
+            updateWeather();
             return true;
         }
 
@@ -89,6 +92,14 @@ public class MainFragment extends Fragment {
         };
         listView.setOnItemClickListener(clickListener);
         return rootView;
+    }
+
+    private void updateWeather() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String locationDefault = getContext().getString(R.string.pref_location_default);
+        String locationKey = getContext().getString(R.string.pref_location_key);
+        String location = prefs.getString(locationKey, locationDefault);
+        new FetchWeatherTask().execute(location);
     }
 
     private void initializeForecastAdapter(ListView listView) {
