@@ -40,19 +40,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_map) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            String locationDefault = getString(R.string.pref_location_default);
-            String locationKey = getString(R.string.pref_location_key);
-            String location = prefs.getString(locationKey, locationDefault);
-            Uri locationUri = Uri.parse("geo:0,0?q=" + location);
-            showMap(locationUri);
+            showMap();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void showMap(Uri locationUri) {
+    public void showMap() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String locationDefault = getString(R.string.pref_location_default);
+        String locationKey = getString(R.string.pref_location_key);
+        String location = prefs.getString(locationKey, locationDefault);
+        Uri locationUri = Uri.parse("geo:0,0?q=" + location);
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, locationUri);
         if (mapIntent.resolveActivity(getPackageManager()) != null) {
             startActivity(mapIntent);
