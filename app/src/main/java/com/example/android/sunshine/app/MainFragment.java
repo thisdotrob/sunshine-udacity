@@ -39,6 +39,7 @@ public class MainFragment extends Fragment {
     public final static String EXTRA_MESSAGE = "com.example.android.sunshine.app.MESSAGE";
 
     private ArrayAdapter<String> mForecastAdapter;
+    private WeatherUpdater weatherUpdater;
 
     public MainFragment() {
     }
@@ -52,7 +53,7 @@ public class MainFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        updateWeather();
+        weatherUpdater.updateWeather(getContext());
     }
 
     @Override
@@ -66,7 +67,7 @@ public class MainFragment extends Fragment {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            updateWeather();
+            weatherUpdater.updateWeather(getContext());
             return true;
         }
 
@@ -80,6 +81,7 @@ public class MainFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         initializeForecastAdapter(listView);
+        weatherUpdater = new WeatherUpdater(mForecastAdapter);
         AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -94,14 +96,6 @@ public class MainFragment extends Fragment {
         return rootView;
     }
 
-    private void updateWeather() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String locationDefault = getContext().getString(R.string.pref_location_default);
-        String locationKey = getContext().getString(R.string.pref_location_key);
-        String location = prefs.getString(locationKey, locationDefault);
-        new FetchWeatherTask().execute(location);
-    }
-
     private void initializeForecastAdapter(ListView listView) {
         mForecastAdapter =
                 new ArrayAdapter<>(
@@ -110,149 +104,6 @@ public class MainFragment extends Fragment {
                         R.id.list_item_forecast_textView,
                         new ArrayList<String>());
         listView.setAdapter(mForecastAdapter);
-    }
-
-    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            if (params.length == 0) return null;
-            int days = 7;
-            String postcode = params[0];
-            String urlStr = OpenWeatherApiUrlBuilder.build(postcode, days);
-            String forecastJsonStr = ForecastJsonRetriever.retrieveJsonStr(urlStr);
-            return WeatherDataParser.parse(forecastJsonStr, days);
-        }
-
-        @Override
-        protected void onPostExecute(String[] strings) {
-            mForecastAdapter.clear();
-            for(String s: strings) mForecastAdapter.add(s);
-            super.onPostExecute(strings);
-        }
-    }
-
-    private static class OpenWeatherApiUrlBuilder {
-        static final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
-        static final String QUERY_PARAM = "q";
-        static final String UNITS_PARAM = "units";
-        static final String DAYS_PARAM = "cnt";
-        static final String APPID_PARAM = "APPID";
-
-        private static String build(String postcodeStr, int days) {
-            Uri.Builder uriBuilder = new Uri.Builder();
-            String units = "metric";
-            uriBuilder.scheme("http")
-                    .authority("api.openweathermap.org")
-                    .appendPath("data/2.5/forecast/daily")
-                    .appendQueryParameter(QUERY_PARAM, postcodeStr)
-                    .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
-                    .appendQueryParameter(APPID_PARAM, APP_ID);
-            return uriBuilder.build().toString();
-        }
-    }
-
-    private static class ForecastJsonRetriever {
-        private static final String LOG_TAG = ForecastJsonRetriever.class.getSimpleName();
-
-        private static String retrieveJsonStr(String urlStr) {
-            String forecastJsonStr = null;
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            try {
-                URL url = new URL(urlStr);
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuilder stringBuilder = new StringBuilder();
-                if (inputStream == null) return null;
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line).append("\n");
-                }
-                if (stringBuilder.length() == 0) return null;
-                forecastJsonStr = stringBuilder.toString();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error ", e);
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "Error closing stream", e);
-                    }
-                }
-            }
-            return forecastJsonStr;
-        }
-    }
-
-    private static class WeatherDataParser {
-        private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
-
-        private static String[] parse(String forecastJsonStr, int days) {
-            try {
-                boolean locationNotFound = locationNotFound(forecastJsonStr);
-                if (locationNotFound) {
-                    return new String[] { "Location not found" };
-                } else {
-                    String[] parsedWeatherData = new String[days];
-                    JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
-                    for(int i=0; i<days; i++) {
-                        JSONObject forecast = forecasts.getJSONObject(i);
-                        parsedWeatherData[i] = parseSingleDayForecast(forecast);
-                    }
-                    return parsedWeatherData;
-                }
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error ", e);
-            }
-            return null;
-        }
-
-        private static boolean locationNotFound(String forecastJsonStr) {
-            try {
-                JSONObject jsonObject = new JSONObject(forecastJsonStr);
-                String cod = (String) jsonObject.get("cod");
-                return cod.equals("404");
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error ", e);
-                return false;
-            }
-
-        }
-
-        private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
-            String weatherDescription = parseWeatherDescription(forecast);
-            String highLowTemperature = parseHighLowTemperature(forecast);
-            String formattedDate = parseFormattedDate(forecast);
-            return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
-        }
-
-        private static String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
-            return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
-        }
-
-        private static String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
-            JSONObject tempJson = forecastJson.getJSONObject("temp");
-            int tempMin = (int) Math.round(tempJson.getDouble("min"));
-            int tempMax = (int) Math.round(tempJson.getDouble("max"));
-            return String.format("%d / %d", tempMin, tempMax);
-        }
-
-        private static String parseFormattedDate(JSONObject forecastJson) throws JSONException {
-            long unixSeconds = forecastJson.getLong("dt");
-            Date date = new Date(unixSeconds*1000L);
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
-            return sdf.format(date);
-        }
     }
 
 }
