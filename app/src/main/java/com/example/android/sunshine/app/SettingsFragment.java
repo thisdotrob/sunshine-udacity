@@ -2,6 +2,7 @@ package com.example.android.sunshine.app;
 
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
@@ -40,6 +41,10 @@ public class SettingsFragment extends PreferenceFragment {
     private void bindSummary(Preference preference) {
         if (preference instanceof EditTextPreference) {
             String preferenceValue = ((EditTextPreference) preference).getText();
+            preference.setSummary(preferenceValue);
+        }
+        if (preference instanceof ListPreference) {
+            String preferenceValue = (String) ((ListPreference) preference).getEntry();
             preference.setSummary(preferenceValue);
         }
     }

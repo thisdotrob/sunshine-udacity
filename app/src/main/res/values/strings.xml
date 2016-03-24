@@ -14,4 +14,8 @@
     <string name="pref_location_key">location</string>
     <string name="pref_location_default">London</string>
 
+    <string name="pref_temperature_units_label">Temperature units</string>
+    <string name="pref_temperature_units_key">temperature units</string>
+    <string name="pref_temperature_units_default">metric</string>
+
 </resources>
