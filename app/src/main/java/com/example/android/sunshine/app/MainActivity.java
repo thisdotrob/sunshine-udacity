@@ -1,6 +1,9 @@
 package com.example.android.sunshine.app;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -29,18 +32,32 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
 
+        if (id == R.id.action_map) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            String locationDefault = getString(R.string.pref_location_default);
+            String locationKey = getString(R.string.pref_location_key);
+            String location = prefs.getString(locationKey, locationDefault);
+            Uri locationUri = Uri.parse("geo:0,0?q=" + location);
+            showMap(locationUri);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showMap(Uri locationUri) {
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, locationUri);
+        if (mapIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(mapIntent);
+        }
+
     }
 
 }

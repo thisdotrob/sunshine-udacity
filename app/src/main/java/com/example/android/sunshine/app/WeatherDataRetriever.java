@@ -12,7 +12,7 @@ import java.net.URL;
 public class WeatherDataRetriever {
     private static final String LOG_TAG = WeatherDataRetriever.class.getSimpleName();
 
-    public  static String retrieveJsonStr(String urlStr) {
+    public static String retrieveJsonStr(String urlStr) {
         String forecastJsonStr = null;
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
