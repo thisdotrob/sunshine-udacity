@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 
 public class WeatherUpdater {
@@ -36,7 +35,6 @@ public class WeatherUpdater {
             String location = params[0];
             String units = params[1];
             String urlStr = OpenWeatherApiUrlBuilder.build(location, units, days);
-            Log.d("ROBLOG", urlStr);
             String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
             return WeatherDataParser.parse(forecastJsonStr, days);
         }
