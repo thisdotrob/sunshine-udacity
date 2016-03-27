@@ -64,20 +64,6 @@ public class MainFragment extends Fragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_refresh) {
-            weatherUpdater.updateWeather(getContext());
-            return true;
-        }
-
-
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -97,6 +83,15 @@ public class MainFragment extends Fragment {
         };
         listView.setOnItemClickListener(clickListener);
         return rootView;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_refresh) {
+            weatherUpdater.updateWeather(getContext());
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void initializeForecastAdapter(ListView listView) {

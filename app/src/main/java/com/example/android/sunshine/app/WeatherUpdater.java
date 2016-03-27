@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 
 public class WeatherUpdater {
@@ -20,17 +21,22 @@ public class WeatherUpdater {
         String locationDefault = context.getString(R.string.pref_location_default);
         String locationKey = context.getString(R.string.pref_location_key);
         String location = prefs.getString(locationKey, locationDefault);
-        new FetchWeatherTask().execute(location);
+        String unitsDefault = context.getString(R.string.pref_units_value_metric);
+        String unitsKey = context.getString(R.string.pref_units_key);
+        String units = prefs.getString(unitsKey, unitsDefault);
+        new FetchWeatherTask().execute(location, units);
     }
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         @Override
         protected String[] doInBackground(String... params) {
-            if (params.length == 0) return null;
+            if (params.length < 2) return null;
             int days = 7;
-            String postcode = params[0];
-            String urlStr = OpenWeatherApiUrlBuilder.build(postcode, days);
+            String location = params[0];
+            String units = params[1];
+            String urlStr = OpenWeatherApiUrlBuilder.build(location, units, days);
+            Log.d("ROBLOG", urlStr);
             String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
             return WeatherDataParser.parse(forecastJsonStr, days);
         }
@@ -50,9 +56,8 @@ public class WeatherUpdater {
         static final String DAYS_PARAM = "cnt";
         static final String APPID_PARAM = "APPID";
 
-        private static String build(String postcodeStr, int days) {
+        private static String build(String postcodeStr, String units, int days) {
             Uri.Builder uriBuilder = new Uri.Builder();
-            String units = "metric";
             uriBuilder.scheme("http")
                     .authority("api.openweathermap.org")
                     .appendPath("data/2.5/forecast/daily")
