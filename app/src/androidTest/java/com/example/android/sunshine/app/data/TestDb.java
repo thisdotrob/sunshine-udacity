@@ -17,33 +17,49 @@ public class TestDb extends AndroidTestCase {
         deleteTheDatabase();
     }
 
+    private long insertRow(String tableName, ContentValues testValues) {
+        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+        return db.insert(tableName, null, testValues);
+    }
+
+
+    private Cursor getAllColumnsAndRows(String tableName) {
+        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+        return db.query(tableName, null, null, null, null, null, null);
+    }
+
+    private void closeDb() {
+        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+        db.close();
+    }
+
     public void testCreateDb() throws Throwable {
         final HashSet<String> tableNameHashSet = new HashSet<>();
+
         tableNameHashSet.add(WeatherContract.LocationEntry.TABLE_NAME);
         tableNameHashSet.add(WeatherContract.WeatherEntry.TABLE_NAME);
 
         deleteTheDatabase();
 
         SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+
         assertEquals(true, db.isOpen());
 
-        Cursor c = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
 
-        assertTrue("Error: This means that the database has not been created correctly",
-                c.moveToFirst());
+        assertTrue("Error: The database has not been created correctly", cursor.moveToFirst());
 
         do {
-            tableNameHashSet.remove(c.getString(0));
-        } while( c.moveToNext() );
+            tableNameHashSet.remove(cursor.getString(0));
+        } while( cursor.moveToNext() );
 
-        assertTrue("Error: Your database was created without both the location entry and weather entry tables",
+        assertTrue("Error: Your database was created without both the location and weather tables",
                 tableNameHashSet.isEmpty());
 
-        c = db.rawQuery("PRAGMA table_info(" + WeatherContract.LocationEntry.TABLE_NAME + ")",
+        cursor = db.rawQuery("PRAGMA table_info(" + WeatherContract.LocationEntry.TABLE_NAME + ")",
                 null);
-
         assertTrue("Error: This means that we were unable to query the database for table information.",
-                c.moveToFirst());
+                cursor.moveToFirst());
 
         final HashSet<String> locationColumnHashSet = new HashSet<>();
         locationColumnHashSet.add(WeatherContract.LocationEntry._ID);
@@ -52,39 +68,75 @@ public class TestDb extends AndroidTestCase {
         locationColumnHashSet.add(WeatherContract.LocationEntry.COLUMN_COORD_LONG);
         locationColumnHashSet.add(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING);
 
-        int columnNameIndex = c.getColumnIndex("name");
+        int columnNameIndex = cursor.getColumnIndex("name");
         do {
-            String columnName = c.getString(columnNameIndex);
+            String columnName = cursor.getString(columnNameIndex);
             locationColumnHashSet.remove(columnName);
-        } while(c.moveToNext());
+        } while(cursor.moveToNext());
 
         assertTrue("Error: The database doesn't contain all of the required location entry columns",
                 locationColumnHashSet.isEmpty());
-        db.close();
+
+        cursor.close();
+        closeDb();
     }
 
     public void testLocationTable() {
-        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+        ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
 
-        ContentValues testValues = TestUtilities.createNorthPoleLocationValues();
+        long locationRowId = insertRow(
+                WeatherContract.LocationEntry.TABLE_NAME,
+                locationValues
+        );
 
-        long locationRowId;
-        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, testValues);
+        assertTrue("Error: Location Not Inserted Correctly", locationRowId != -1);
 
-        assertTrue(locationRowId != -1);
-
-        Cursor cursor = db.query(
-                WeatherContract.LocationEntry.TABLE_NAME, null, null, null, null, null, null);
+        Cursor cursor = getAllColumnsAndRows(WeatherContract.LocationEntry.TABLE_NAME);
 
         assertTrue("Error: No Records returned from location query", cursor.moveToFirst());
 
         TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
-                cursor, testValues);
+                cursor, locationValues);
 
         assertFalse("Error: More than one record returned from location query",
                 cursor.moveToNext());
 
         cursor.close();
-        db.close();
+        closeDb();
     }
+
+    public void testWeatherTable() {
+        ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
+
+        long locationRowId = insertRow(
+                WeatherContract.LocationEntry.TABLE_NAME,
+                locationValues
+        );
+
+        ContentValues weatherValues = TestUtilities.createWeatherValues(locationRowId);
+
+        long weatherRowId = insertRow(
+                WeatherContract.WeatherEntry.TABLE_NAME,
+                weatherValues
+        );
+
+        assertTrue("Error: Weather Not Inserted Correctly", weatherRowId != -1);
+
+        Cursor cursor = getAllColumnsAndRows(WeatherContract.WeatherEntry.TABLE_NAME);
+
+        assertTrue("Error: No Records returned from weather query", cursor.moveToFirst());
+
+        TestUtilities.validateCurrentRecord(
+                "testInsertReadDb weatherEntry failed to validate",
+                cursor,
+                weatherValues
+        );
+
+        assertFalse("Error: More than one record returned from weather query",
+                cursor.moveToNext());
+
+        cursor.close();
+        closeDb();
+    }
+
 }
