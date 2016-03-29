@@ -1,5 +1,6 @@
 package com.example.android.sunshine.app.data;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
@@ -21,9 +22,9 @@ public class TestDb extends AndroidTestCase {
         tableNameHashSet.add(WeatherContract.LocationEntry.TABLE_NAME);
         tableNameHashSet.add(WeatherContract.WeatherEntry.TABLE_NAME);
 
-        mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
-        SQLiteDatabase db = new WeatherDbHelper(
-                this.mContext).getWritableDatabase();
+        deleteTheDatabase();
+
+        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
         assertEquals(true, db.isOpen());
 
         Cursor c = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
@@ -59,6 +60,31 @@ public class TestDb extends AndroidTestCase {
 
         assertTrue("Error: The database doesn't contain all of the required location entry columns",
                 locationColumnHashSet.isEmpty());
+        db.close();
+    }
+
+    public void testLocationTable() {
+        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
+
+        ContentValues testValues = TestUtilities.createNorthPoleLocationValues();
+
+        long locationRowId;
+        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, testValues);
+
+        assertTrue(locationRowId != -1);
+
+        Cursor cursor = db.query(
+                WeatherContract.LocationEntry.TABLE_NAME, null, null, null, null, null, null);
+
+        assertTrue("Error: No Records returned from location query", cursor.moveToFirst());
+
+        TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
+                cursor, testValues);
+
+        assertFalse("Error: More than one record returned from location query",
+                cursor.moveToNext());
+
+        cursor.close();
         db.close();
     }
 }
