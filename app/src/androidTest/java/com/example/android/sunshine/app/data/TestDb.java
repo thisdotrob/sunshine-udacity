@@ -4,48 +4,54 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import java.util.HashSet;
 
 public class TestDb extends AndroidTestCase {
 
-    void deleteTheDatabase() {
+    private SQLiteDatabase db;
+    private Cursor cursor;
+
+    @Override
+    protected void setUp() {
+        Log.d("ROBLOG", "setUp");
+
         mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
+        db = new WeatherDbHelper(mContext).getWritableDatabase();
     }
 
-    public void setUp() {
-        deleteTheDatabase();
+    @Override
+    protected void tearDown() {
+        Log.d("ROBLOG", "tearDown");
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        if (db != null) {
+            db.close();
+        }
     }
 
     private long insertRow(String tableName, ContentValues testValues) {
-        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
         return db.insert(tableName, null, testValues);
     }
 
-
     private Cursor getAllColumnsAndRows(String tableName) {
-        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
         return db.query(tableName, null, null, null, null, null, null);
     }
 
-    private void closeDb() {
-        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
-        db.close();
-    }
-
     public void testCreateDb() throws Throwable {
+        Log.d("ROBLOG", "testCreateDb");
+
         final HashSet<String> tableNameHashSet = new HashSet<>();
 
         tableNameHashSet.add(WeatherContract.LocationEntry.TABLE_NAME);
         tableNameHashSet.add(WeatherContract.WeatherEntry.TABLE_NAME);
 
-        deleteTheDatabase();
-
-        SQLiteDatabase db = new WeatherDbHelper(mContext).getWritableDatabase();
-
         assertEquals(true, db.isOpen());
 
-        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
 
         assertTrue("Error: The database has not been created correctly", cursor.moveToFirst());
 
@@ -76,12 +82,11 @@ public class TestDb extends AndroidTestCase {
 
         assertTrue("Error: The database doesn't contain all of the required location entry columns",
                 locationColumnHashSet.isEmpty());
-
-        cursor.close();
-        closeDb();
     }
 
     public void testLocationTable() {
+        Log.d("ROBLOG", "testLocationTable");
+
         ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
 
         long locationRowId = insertRow(
@@ -91,7 +96,7 @@ public class TestDb extends AndroidTestCase {
 
         assertTrue("Error: Location Not Inserted Correctly", locationRowId != -1);
 
-        Cursor cursor = getAllColumnsAndRows(WeatherContract.LocationEntry.TABLE_NAME);
+        cursor = getAllColumnsAndRows(WeatherContract.LocationEntry.TABLE_NAME);
 
         assertTrue("Error: No Records returned from location query", cursor.moveToFirst());
 
@@ -100,12 +105,11 @@ public class TestDb extends AndroidTestCase {
 
         assertFalse("Error: More than one record returned from location query",
                 cursor.moveToNext());
-
-        cursor.close();
-        closeDb();
     }
 
     public void testWeatherTable() {
+        Log.d("ROBLOG", "testWeatherTable");
+
         ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
 
         long locationRowId = insertRow(
@@ -122,7 +126,7 @@ public class TestDb extends AndroidTestCase {
 
         assertTrue("Error: Weather Not Inserted Correctly", weatherRowId != -1);
 
-        Cursor cursor = getAllColumnsAndRows(WeatherContract.WeatherEntry.TABLE_NAME);
+        cursor = getAllColumnsAndRows(WeatherContract.WeatherEntry.TABLE_NAME);
 
         assertTrue("Error: No Records returned from weather query", cursor.moveToFirst());
 
@@ -135,8 +139,7 @@ public class TestDb extends AndroidTestCase {
         assertFalse("Error: More than one record returned from weather query",
                 cursor.moveToNext());
 
-        cursor.close();
-        closeDb();
+
     }
 
 }
