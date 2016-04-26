@@ -21,16 +21,16 @@ public class WeatherDataRetriever {
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuilder stringBuilder = new StringBuilder();
-            if (inputStream == null) return null;
-            reader = new BufferedReader(new InputStreamReader(inputStream));
+            InputStream stream = urlConnection.getInputStream();
+            StringBuilder builder = new StringBuilder();
+            if (stream == null) return null;
+            reader = new BufferedReader(new InputStreamReader(stream));
             String line;
             while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line).append("\n");
+                builder.append(line).append("\n");
             }
-            if (stringBuilder.length() == 0) return null;
-            forecastJsonStr = stringBuilder.toString();
+            if (builder.length() == 0) return null;
+            forecastJsonStr = builder.toString();
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
             return null;

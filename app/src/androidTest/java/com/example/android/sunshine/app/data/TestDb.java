@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
-import android.util.Log;
 
 import java.util.HashSet;
 
@@ -15,22 +14,14 @@ public class TestDb extends AndroidTestCase {
 
     @Override
     protected void setUp() {
-        Log.d("ROBLOG", "setUp");
-
         mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
         db = new WeatherDbHelper(mContext).getWritableDatabase();
     }
 
     @Override
     protected void tearDown() {
-        Log.d("ROBLOG", "tearDown");
-
-        if (cursor != null) {
-            cursor.close();
-        }
-        if (db != null) {
-            db.close();
-        }
+        if (cursor != null) { cursor.close(); }
+        if (db != null) { db.close(); }
     }
 
     private long insertRow(String tableName, ContentValues testValues) {
@@ -42,8 +33,6 @@ public class TestDb extends AndroidTestCase {
     }
 
     public void testCreateDb() throws Throwable {
-        Log.d("ROBLOG", "testCreateDb");
-
         final HashSet<String> tableNameHashSet = new HashSet<>();
 
         tableNameHashSet.add(WeatherContract.LocationEntry.TABLE_NAME);
@@ -85,8 +74,6 @@ public class TestDb extends AndroidTestCase {
     }
 
     public void testLocationTable() {
-        Log.d("ROBLOG", "testLocationTable");
-
         ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
 
         long locationRowId = insertRow(
@@ -108,8 +95,6 @@ public class TestDb extends AndroidTestCase {
     }
 
     public void testWeatherTable() {
-        Log.d("ROBLOG", "testWeatherTable");
-
         ContentValues locationValues = TestUtilities.createNorthPoleLocationValues();
 
         long locationRowId = insertRow(
@@ -138,8 +123,5 @@ public class TestDb extends AndroidTestCase {
 
         assertFalse("Error: More than one record returned from weather query",
                 cursor.moveToNext());
-
-
     }
-
 }

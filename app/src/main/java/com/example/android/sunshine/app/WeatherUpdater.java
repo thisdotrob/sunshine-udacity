@@ -23,47 +23,6 @@ public class WeatherUpdater {
         String unitsDefault = context.getString(R.string.pref_units_value_metric);
         String unitsKey = context.getString(R.string.pref_units_key);
         String units = prefs.getString(unitsKey, unitsDefault);
-        new FetchWeatherTask().execute(location, units);
-    }
-
-    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            if (params.length < 2) return null;
-            int days = 7;
-            String location = params[0];
-            String units = params[1];
-            String urlStr = OpenWeatherApiUrlBuilder.build(location, units, days);
-            String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
-            return WeatherDataParser.parse(forecastJsonStr, days);
-        }
-
-        @Override
-        protected void onPostExecute(String[] strings) {
-            mForecastAdapter.clear();
-            for(String s: strings) mForecastAdapter.add(s);
-            super.onPostExecute(strings);
-        }
-    }
-
-    private static class OpenWeatherApiUrlBuilder {
-        static final String APP_ID = "cc94715e94287e49ed67f30b455b4761";
-        static final String QUERY_PARAM = "q";
-        static final String UNITS_PARAM = "units";
-        static final String DAYS_PARAM = "cnt";
-        static final String APPID_PARAM = "APPID";
-
-        private static String build(String postcodeStr, String units, int days) {
-            Uri.Builder uriBuilder = new Uri.Builder();
-            uriBuilder.scheme("http")
-                    .authority("api.openweathermap.org")
-                    .appendPath("data/2.5/forecast/daily")
-                    .appendQueryParameter(QUERY_PARAM, postcodeStr)
-                    .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, Integer.toString(days))
-                    .appendQueryParameter(APPID_PARAM, APP_ID);
-            return uriBuilder.build().toString();
-        }
+        new FetchWeatherTask(mForecastAdapter).execute(location, units);
     }
 }

@@ -16,42 +16,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("ROBLOG", "onCreate called");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.d("ROBLOG", "onDestroy called");
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d("ROBLOG", "onPause called");
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.d("ROBLOG", "onResume called");
-        super.onResume();
-    }
-
-    @Override
-    protected void onStart() {
-        Log.d("ROBLOG", "onStart called");
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d("ROBLOG", "onStop called");
-        super.onStop();
     }
 
     @Override

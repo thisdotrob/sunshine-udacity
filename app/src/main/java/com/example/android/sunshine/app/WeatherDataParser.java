@@ -10,17 +10,20 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class WeatherDataParser {
-    private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
 
-    public static String[] parse(String forecastJsonStr, int days) {
+    private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
+    private static final String OWM_LIST = "list";
+
+    public static String[] parse(String forecastJsonStr) {
         try {
-            boolean locationNotFound = locationNotFound(forecastJsonStr);
-            if (locationNotFound) {
+            JSONObject forecastJson = new JSONObject((forecastJsonStr));
+            if (locationNotFound(forecastJson)) {
                 return new String[] { "Location not found" };
             } else {
+                JSONArray forecasts = forecastJson.getJSONArray(OWM_LIST);
+                int days = forecasts.length();
                 String[] parsedWeatherData = new String[days];
-                JSONArray forecasts = new JSONObject(forecastJsonStr).getJSONArray("list");
-                for(int i=0; i<days; i++) {
+                for(int i = 0; i < days; i++) {
                     JSONObject forecast = forecasts.getJSONObject(i);
                     parsedWeatherData[i] = parseSingleDayForecast(forecast);
                 }
@@ -32,16 +35,14 @@ public class WeatherDataParser {
         return null;
     }
 
-    private static boolean locationNotFound(String forecastJsonStr) {
+    private static boolean locationNotFound(JSONObject forecastJson) {
         try {
-            JSONObject jsonObject = new JSONObject(forecastJsonStr);
-            String cod = (String) jsonObject.get("cod");
+            String cod = (String) forecastJson.get("cod");
             return cod.equals("404");
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error ", e);
             return false;
         }
-
     }
 
     private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
