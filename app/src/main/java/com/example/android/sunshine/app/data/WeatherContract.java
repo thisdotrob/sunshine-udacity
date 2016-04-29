@@ -2,14 +2,19 @@ package com.example.android.sunshine.app.data;
 
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.text.format.Time;
 
 public class WeatherContract {
 
     public static final String CONTENT_AUTHORITY = "com.example.android.sunshine.app";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_WEATHER = "weather";
+    public static final String PATH_LOCATION = "location";
 
     public static final class LocationEntry implements BaseColumns {
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
+
         public static final String TABLE_NAME = "location";
         public static final String COLUMN_LOCATION_SETTING = "location_setting";
         public static final String COLUMN_CITY_NAME = "city_name";
@@ -38,5 +43,16 @@ public class WeatherContract {
             return CONTENT_URI.buildUpon().appendPath(location).build();
         }
 
+        public static Uri buildWeatherLocationWithDate(String location, long date) {
+            return CONTENT_URI.buildUpon().appendPath(location)
+                    .appendPath(Long.toString(normalizeDate(date))).build();
+        }
+
+        public static long normalizeDate(long startDate) {
+            Time time = new Time();
+            time.set(startDate);
+            int julianDay = Time.getJulianDay(startDate, time.gmtoff);
+            return time.setJulianDay(julianDay);
+        }
     }
 }
