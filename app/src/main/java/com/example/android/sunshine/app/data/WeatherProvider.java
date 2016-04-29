@@ -15,7 +15,17 @@ public class WeatherProvider extends ContentProvider {
     static final int LOCATION = 300;
 
     static UriMatcher buildUriMatcher() {
-        return null;
+        final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
+        final String authority = WeatherContract.CONTENT_AUTHORITY;
+        final String path_weather = WeatherContract.PATH_WEATHER;
+        final String path_location = WeatherContract.PATH_LOCATION;
+
+        matcher.addURI(authority, path_weather, WEATHER);
+        matcher.addURI(authority, path_location, LOCATION);
+        matcher.addURI(authority, path_weather + "/*", WEATHER_WITH_LOCATION);
+        matcher.addURI(authority, path_weather + "/*/#", WEATHER_WITH_LOCATION_AND_DATE);
+
+        return matcher;
     }
 
     @Override
