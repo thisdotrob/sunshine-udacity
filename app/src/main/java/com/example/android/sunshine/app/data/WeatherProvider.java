@@ -9,6 +9,8 @@ import android.support.annotation.Nullable;
 
 public class WeatherProvider extends ContentProvider {
 
+    private WeatherDbHelper mOpenHelper;
+
     static final int WEATHER = 100;
     static final int WEATHER_WITH_LOCATION = 101;
     static final int WEATHER_WITH_LOCATION_AND_DATE = 102;
@@ -30,7 +32,8 @@ public class WeatherProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        return false;
+        mOpenHelper = new WeatherDbHelper(getContext());
+        return true;
     }
 
     @Nullable
