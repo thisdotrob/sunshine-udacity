@@ -22,13 +22,41 @@ public class TestProvider extends AndroidTestCase {
         deleteAllRecords();
     }
 
-    public void deleteAllRecords() {
-        WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    public void deleteAllRecordsFromProvider() {
+        mContext.getContentResolver().delete(
+                WeatherEntry.CONTENT_URI,
+                null,
+                null
+        );
+        mContext.getContentResolver().delete(
+                LocationEntry.CONTENT_URI,
+                null,
+                null
+        );
 
-        db.delete(WeatherEntry.TABLE_NAME, null, null);
-        db.delete(LocationEntry.TABLE_NAME, null, null);
-        db.close();
+        Cursor cursor = mContext.getContentResolver().query(
+                WeatherEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Weather table during delete", 0, cursor.getCount());
+        cursor.close();
+
+        cursor = mContext.getContentResolver().query(
+                LocationEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Location table during delete", 0, cursor.getCount());
+        cursor.close();
+    }
+
+    public void deleteAllRecords() {
+        deleteAllRecordsFromProvider();
     }
 
     public void testProviderRegistry() {
@@ -290,5 +318,25 @@ public class TestProvider extends AndroidTestCase {
                 cursor, updatedValues);
 
         cursor.close();
+    }
+
+    public void testDeleteRecords() {
+        testInsertReadProvider();
+
+        // Register a content observer for our location delete.
+        TestUtilities.TestContentObserver locationObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(LocationEntry.CONTENT_URI, true, locationObserver);
+
+        // Register a content observer for our weather delete.
+        TestUtilities.TestContentObserver weatherObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(WeatherEntry.CONTENT_URI, true, weatherObserver);
+
+        deleteAllRecordsFromProvider();
+
+        locationObserver.waitForNotificationOrFail();
+        weatherObserver.waitForNotificationOrFail();
+
+        mContext.getContentResolver().unregisterContentObserver(locationObserver);
+        mContext.getContentResolver().unregisterContentObserver(weatherObserver);
     }
 }
