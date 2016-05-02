@@ -3,12 +3,28 @@ package com.example.android.sunshine.app.data;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
+import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
 import com.example.android.sunshine.app.data.WeatherContract.WeatherEntry;
 import com.example.android.sunshine.app.data.WeatherContract.LocationEntry;
 
 public class TestProvider extends AndroidTestCase {
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        deleteAllRecords();
+    }
+
+    public void deleteAllRecords() {
+        WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        db.delete(WeatherEntry.TABLE_NAME, null, null);
+        db.delete(LocationEntry.TABLE_NAME, null, null);
+        db.close();
+    }
 
     public void testProviderRegistry() {
         PackageManager pm = mContext.getPackageManager();
