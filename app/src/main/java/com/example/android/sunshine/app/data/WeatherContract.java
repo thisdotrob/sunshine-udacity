@@ -1,6 +1,7 @@
 package com.example.android.sunshine.app.data;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.format.Time;
@@ -13,6 +14,13 @@ public class WeatherContract {
 
     public static final String PATH_WEATHER = "weather";
     public static final String PATH_LOCATION = "location";
+
+    public static long normalizeDate(long startDate) {
+        Time time = new Time();
+        time.set(startDate);
+        int julianDay = Time.getJulianDay(startDate, time.gmtoff);
+        return time.setJulianDay(julianDay);
+    }
 
     public static final class LocationEntry implements BaseColumns {
         public static final Uri CONTENT_URI =
@@ -27,6 +35,10 @@ public class WeatherContract {
         public static final String COLUMN_CITY_NAME = "city_name";
         public static final String COLUMN_COORD_LAT = "coord_lat";
         public static final String COLUMN_COORD_LONG = "coord_long";
+
+        public static Uri buildLocationUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
     }
 
     public static final class WeatherEntry implements BaseColumns {
@@ -53,6 +65,10 @@ public class WeatherContract {
         public static final String COLUMN_WIND_SPEED = "wind";
         public static final String COLUMN_DEGREES = "degrees";
 
+        public static Uri buildWeatherUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
         public static Uri buildWeatherLocation(String location) {
             return CONTENT_URI.buildUpon().appendPath(location).build();
         }
@@ -67,13 +83,6 @@ public class WeatherContract {
             long normalizedDate = normalizeDate(startDate);
             return CONTENT_URI.buildUpon().appendPath(locationSetting)
                     .appendQueryParameter(COLUMN_DATE, Long.toString(normalizedDate)).build();
-        }
-
-        public static long normalizeDate(long startDate) {
-            Time time = new Time();
-            time.set(startDate);
-            int julianDay = Time.getJulianDay(startDate, time.gmtoff);
-            return time.setJulianDay(julianDay);
         }
 
         public static String getLocationSettingFromUri(Uri uri) {
