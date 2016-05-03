@@ -1,8 +1,15 @@
 package com.example.android.sunshine.app;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
+import com.example.android.sunshine.app.data.WeatherContract;
+import com.example.android.sunshine.app.data.WeatherProvider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,30 +21,66 @@ import java.util.Date;
 public class WeatherDataParser {
 
     private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
-    private static final String OWM_LIST = "list";
 
-    public static String[] parse(Context context, String forecastJsonStr) {
+    private static final String OWM_LIST = "list";
+    final String OWM_CITY = "city";
+    final String OWM_CITY_NAME = "name";
+    final String OWM_COORD = "coord";
+    final String OWM_LATITUDE = "lat";
+    final String OWM_LONGITUDE = "lon";
+
+
+    private static Context mContext;
+
+    public WeatherDataParser(Context context) {
+        mContext = context;
+    }
+
+    public String[] parse(String forecastJsonStr, String locationSetting) {
+
         try {
+
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
+
             if (locationNotFound(forecastJson)) {
+
                 return new String[] { "Location not found" };
+
             } else {
-                JSONArray forecasts = forecastJson.getJSONArray(OWM_LIST);
-                int days = forecasts.length();
+
+                JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
+
+                String cityName = cityJson.getString(OWM_CITY_NAME);
+
+                JSONObject cityCoord = cityJson.getJSONObject(OWM_COORD);
+
+                double cityLatitude = cityCoord.getDouble(OWM_LATITUDE);
+                double cityLongitude = cityCoord.getDouble(OWM_LONGITUDE);
+
+                getOrAddLocation(locationSetting, cityName, cityLatitude, cityLongitude);
+
+                JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
+
+                int days = weatherArray.length();
+
                 String[] parsedWeatherData = new String[days];
                 for(int i = 0; i < days; i++) {
-                    JSONObject forecast = forecasts.getJSONObject(i);
-                    parsedWeatherData[i] = parseSingleDayForecast(context, forecast);
+                    JSONObject forecast = weatherArray.getJSONObject(i);
+                    parsedWeatherData[i] = parseSingleDayForecast(forecast);
                 }
+
                 return parsedWeatherData;
+
             }
         } catch (JSONException e) {
+
             Log.e(LOG_TAG, "Error ", e);
+
         }
         return null;
     }
 
-    private static boolean locationNotFound(JSONObject forecastJson) {
+    private boolean locationNotFound(JSONObject forecastJson) {
         try {
             String cod = (String) forecastJson.get("cod");
             return cod.equals("404");
@@ -47,30 +90,28 @@ public class WeatherDataParser {
         }
     }
 
-    private static String parseSingleDayForecast(
-            Context context, JSONObject forecast) throws JSONException {
+    private String parseSingleDayForecast(JSONObject forecast) throws JSONException {
         String weatherDescription = parseWeatherDescription(forecast);
-        String highLowTemperature = parseHighLowTemperature(context, forecast);
+        String highLowTemperature = parseHighLowTemperature(forecast);
         String formattedDate = parseFormattedDate(forecast);
         return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
     }
 
-    private static String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
+    private String parseWeatherDescription(JSONObject forecastJson) throws JSONException {
         return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
     }
 
-    private static String parseHighLowTemperature(Context context,
-            JSONObject forecastJson) throws JSONException {
+    private String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
 
         JSONObject tempJson = forecastJson.getJSONObject("temp");
 
         double tempMin = tempJson.getDouble("min");
         double tempMax = tempJson.getDouble("max");
 
-        String unitsDefault = context.getString(R.string.pref_units_value_metric);
-        String unitsKey = context.getString(R.string.pref_units_key);
+        String unitsDefault = mContext.getString(R.string.pref_units_value_metric);
+        String unitsKey = mContext.getString(R.string.pref_units_key);
         String unitsUserSetting = PreferenceManager.
-                getDefaultSharedPreferences(context).
+                getDefaultSharedPreferences(mContext).
                 getString(unitsKey, unitsDefault);
 
         if (!unitsDefault.equals(unitsUserSetting)) {
@@ -84,14 +125,14 @@ public class WeatherDataParser {
         return String.format("%d / %d", roundedMin, roundedMax);
     }
 
-    private static String parseFormattedDate(JSONObject forecastJson) throws JSONException {
+    private String parseFormattedDate(JSONObject forecastJson) throws JSONException {
         long unixSeconds = forecastJson.getLong("dt");
         Date date = new Date(unixSeconds*1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
         return sdf.format(date);
     }
 
-    private static double convertTemp(double temp, String fromUnits) {
+    private double convertTemp(double temp, String fromUnits) {
         double convertedTemp;
         switch (fromUnits) {
             case "metric":
@@ -104,5 +145,40 @@ public class WeatherDataParser {
                 throw new UnsupportedOperationException("Unknown units: " + fromUnits);
         }
         return convertedTemp;
+    }
+
+    public long getOrAddLocation(String locationSetting, String cityName, double lat, double lon) {
+
+        long locationId;
+
+        Cursor locationCursor = mContext.getContentResolver().query(
+                WeatherContract.LocationEntry.CONTENT_URI,
+                new String[]{WeatherContract.LocationEntry._ID},
+                WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
+                new String[]{locationSetting},
+                null);
+
+        if (locationCursor.moveToFirst()) {
+            int locationIdIndex = locationCursor.getColumnIndex(WeatherContract.LocationEntry._ID);
+            locationId = locationCursor.getLong(locationIdIndex);
+        } else {
+            ContentValues locationValues = new ContentValues();
+
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
+            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, lon);
+
+            Uri insertedUri = mContext.getContentResolver().insert(
+                    WeatherContract.LocationEntry.CONTENT_URI,
+                    locationValues
+            );
+
+            locationId = ContentUris.parseId(insertedUri);
+        }
+
+        locationCursor.close();
+
+        return locationId;
     }
 }

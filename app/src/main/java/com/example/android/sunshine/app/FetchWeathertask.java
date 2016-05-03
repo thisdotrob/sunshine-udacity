@@ -19,10 +19,10 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
     protected String[] doInBackground(String... params) {
         if (params.length < 1) return null;
         int days = 7;
-        String location = params[0];
-        String urlStr = buildOpenWeatherApiUrl(location, days);
+        String locationSetting = params[0];
+        String urlStr = buildOpenWeatherApiUrl(locationSetting, days);
         String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
-        return WeatherDataParser.parse(mContext, forecastJsonStr);
+        return new WeatherDataParser(mContext).parse(forecastJsonStr, locationSetting);
     }
 
     @Override
@@ -49,5 +49,4 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
                 .appendQueryParameter(APPID_PARAM, APP_ID);
         return uriBuilder.build().toString();
     }
-
 }
