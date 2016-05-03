@@ -1,5 +1,7 @@
 package com.example.android.sunshine.app;
 
+import android.content.Context;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -14,7 +16,7 @@ public class WeatherDataParser {
     private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
     private static final String OWM_LIST = "list";
 
-    public static String[] parse(String forecastJsonStr, String baseUnits, String userUnits) {
+    public static String[] parse(Context context, String forecastJsonStr) {
         try {
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
             if (locationNotFound(forecastJson)) {
@@ -25,7 +27,7 @@ public class WeatherDataParser {
                 String[] parsedWeatherData = new String[days];
                 for(int i = 0; i < days; i++) {
                     JSONObject forecast = forecasts.getJSONObject(i);
-                    parsedWeatherData[i] = parseSingleDayForecast(forecast, baseUnits, userUnits);
+                    parsedWeatherData[i] = parseSingleDayForecast(context, forecast);
                 }
                 return parsedWeatherData;
             }
@@ -46,9 +48,9 @@ public class WeatherDataParser {
     }
 
     private static String parseSingleDayForecast(
-            JSONObject forecast, String baseUnits, String userUnits) throws JSONException {
+            Context context, JSONObject forecast) throws JSONException {
         String weatherDescription = parseWeatherDescription(forecast);
-        String highLowTemperature = parseHighLowTemperature(forecast, baseUnits, userUnits);
+        String highLowTemperature = parseHighLowTemperature(context, forecast);
         String formattedDate = parseFormattedDate(forecast);
         return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
     }
@@ -57,16 +59,23 @@ public class WeatherDataParser {
         return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
     }
 
-    private static String parseHighLowTemperature(
-            JSONObject forecastJson, String baseUnits, String userUnits) throws JSONException {
+    private static String parseHighLowTemperature(Context context,
+            JSONObject forecastJson) throws JSONException {
+
         JSONObject tempJson = forecastJson.getJSONObject("temp");
 
         double tempMin = tempJson.getDouble("min");
         double tempMax = tempJson.getDouble("max");
 
-        if (!baseUnits.equals(userUnits)) {
-            tempMin = convertTemp(tempMin, baseUnits);
-            tempMax = convertTemp(tempMax, baseUnits);
+        String unitsDefault = context.getString(R.string.pref_units_value_metric);
+        String unitsKey = context.getString(R.string.pref_units_key);
+        String unitsUserSetting = PreferenceManager.
+                getDefaultSharedPreferences(context).
+                getString(unitsKey, unitsDefault);
+
+        if (!unitsDefault.equals(unitsUserSetting)) {
+            tempMin = convertTemp(tempMin, unitsDefault);
+            tempMax = convertTemp(tempMax, unitsDefault);
         }
 
         int roundedMin = (int) Math.round(tempMin);

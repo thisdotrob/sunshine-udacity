@@ -20,9 +20,6 @@ public class WeatherUpdater {
         String locationDefault = context.getString(R.string.pref_location_default);
         String locationKey = context.getString(R.string.pref_location_key);
         String locationPref = prefs.getString(locationKey, locationDefault);
-        String unitsBase = context.getString(R.string.pref_units_value_metric);
-        String unitsKey = context.getString(R.string.pref_units_key);
-        String unitsPref = prefs.getString(unitsKey, unitsBase);
-        new FetchWeatherTask(mForecastAdapter).execute(locationPref, unitsBase, unitsPref);
+        new FetchWeatherTask(context, mForecastAdapter).execute(locationPref);
     }
 }
