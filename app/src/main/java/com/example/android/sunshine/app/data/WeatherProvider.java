@@ -1,5 +1,6 @@
 package com.example.android.sunshine.app.data;
 
+import android.annotation.TargetApi;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -176,10 +177,10 @@ public class WeatherProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-
         final int match = sUriMatcher.match(uri);
-
         int rowsDeleted;
+
+        if (null == selection) selection = "1";
 
         switch (match) {
             case WEATHER: {
@@ -201,7 +202,11 @@ public class WeatherProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+
+        if (rowsDeleted != 0 ) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
         return rowsDeleted;
     }
 
@@ -241,7 +246,11 @@ public class WeatherProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+
+        if (rowsUpdated != 0 ) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
         return rowsUpdated;
     }
 
@@ -270,7 +279,6 @@ public class WeatherProvider extends ContentProvider {
         );
     }
 
-
     private Cursor getWeatherByLocationSettingAndDate(
             Uri uri, String[] projection, String sortOrder) {
         String locationSetting = WeatherContract.WeatherEntry.getLocationSettingFromUri(uri);
@@ -284,5 +292,39 @@ public class WeatherProvider extends ContentProvider {
                 null,
                 sortOrder
         );
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case WEATHER:
+                db.beginTransaction();
+                int returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        normalizeDate(value);
+                        long _id = db.insert(WeatherContract.WeatherEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            returnCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+            default:
+                return super.bulkInsert(uri, values);
+        }
+    }
+
+    @Override
+    @TargetApi(11)
+    public void shutdown() {
+        mOpenHelper.close();
+        super.shutdown();
     }
 }
