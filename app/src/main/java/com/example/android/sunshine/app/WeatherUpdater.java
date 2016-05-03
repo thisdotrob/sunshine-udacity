@@ -19,10 +19,10 @@ public class WeatherUpdater {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String locationDefault = context.getString(R.string.pref_location_default);
         String locationKey = context.getString(R.string.pref_location_key);
-        String location = prefs.getString(locationKey, locationDefault);
-        String unitsDefault = context.getString(R.string.pref_units_value_metric);
+        String locationPref = prefs.getString(locationKey, locationDefault);
+        String unitsBase = context.getString(R.string.pref_units_value_metric);
         String unitsKey = context.getString(R.string.pref_units_key);
-        String units = prefs.getString(unitsKey, unitsDefault);
-        new FetchWeatherTask(mForecastAdapter).execute(location, units);
+        String unitsPref = prefs.getString(unitsKey, unitsBase);
+        new FetchWeatherTask(mForecastAdapter).execute(locationPref, unitsBase, unitsPref);
     }
 }

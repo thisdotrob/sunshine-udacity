@@ -14,9 +14,9 @@ public class WeatherDataParser {
     private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
     private static final String OWM_LIST = "list";
 
-    public static String[] parse(String forecastJsonStr) {
+    public static String[] parse(String forecastJsonStr, String baseUnits, String userUnits) {
         try {
-            JSONObject forecastJson = new JSONObject((forecastJsonStr));
+            JSONObject forecastJson = new JSONObject(forecastJsonStr);
             if (locationNotFound(forecastJson)) {
                 return new String[] { "Location not found" };
             } else {
@@ -25,7 +25,7 @@ public class WeatherDataParser {
                 String[] parsedWeatherData = new String[days];
                 for(int i = 0; i < days; i++) {
                     JSONObject forecast = forecasts.getJSONObject(i);
-                    parsedWeatherData[i] = parseSingleDayForecast(forecast);
+                    parsedWeatherData[i] = parseSingleDayForecast(forecast, baseUnits, userUnits);
                 }
                 return parsedWeatherData;
             }
@@ -45,9 +45,10 @@ public class WeatherDataParser {
         }
     }
 
-    private static String parseSingleDayForecast(JSONObject forecast) throws JSONException {
+    private static String parseSingleDayForecast(
+            JSONObject forecast, String baseUnits, String userUnits) throws JSONException {
         String weatherDescription = parseWeatherDescription(forecast);
-        String highLowTemperature = parseHighLowTemperature(forecast);
+        String highLowTemperature = parseHighLowTemperature(forecast, baseUnits, userUnits);
         String formattedDate = parseFormattedDate(forecast);
         return formattedDate + " - " + weatherDescription + " - " + highLowTemperature;
     }
@@ -56,11 +57,22 @@ public class WeatherDataParser {
         return forecastJson.getJSONArray("weather").getJSONObject(0).getString("main");
     }
 
-    private static String parseHighLowTemperature(JSONObject forecastJson) throws JSONException {
+    private static String parseHighLowTemperature(
+            JSONObject forecastJson, String baseUnits, String userUnits) throws JSONException {
         JSONObject tempJson = forecastJson.getJSONObject("temp");
-        int tempMin = (int) Math.round(tempJson.getDouble("min"));
-        int tempMax = (int) Math.round(tempJson.getDouble("max"));
-        return String.format("%d / %d", tempMin, tempMax);
+
+        double tempMin = tempJson.getDouble("min");
+        double tempMax = tempJson.getDouble("max");
+
+        if (!baseUnits.equals(userUnits)) {
+            tempMin = convertTemp(tempMin, baseUnits);
+            tempMax = convertTemp(tempMax, baseUnits);
+        }
+
+        int roundedMin = (int) Math.round(tempMin);
+        int roundedMax = (int) Math.round(tempMax);
+
+        return String.format("%d / %d", roundedMin, roundedMax);
     }
 
     private static String parseFormattedDate(JSONObject forecastJson) throws JSONException {
@@ -68,5 +80,20 @@ public class WeatherDataParser {
         Date date = new Date(unixSeconds*1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d");
         return sdf.format(date);
+    }
+
+    private static double convertTemp(double temp, String fromUnits) {
+        double convertedTemp;
+        switch (fromUnits) {
+            case "metric":
+                convertedTemp = (temp * 1.8) + 32;
+                break;
+            case "imperial":
+                convertedTemp = (temp - 32) / 1.8;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown units: " + fromUnits);
+        }
+        return convertedTemp;
     }
 }
