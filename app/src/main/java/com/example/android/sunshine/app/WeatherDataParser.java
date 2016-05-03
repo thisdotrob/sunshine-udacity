@@ -26,21 +26,22 @@ public class WeatherDataParser {
     private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
 
     private static final String OWM_LIST = "list";
-    final String OWM_CITY = "city";
-    final String OWM_CITY_NAME = "name";
-    final String OWM_COORD = "coord";
-    final String OWM_LATITUDE = "lat";
-    final String OWM_LONGITUDE = "lon";
-    final String OWM_PRESSURE = "pressure";
-    final String OWM_HUMIDITY = "humidity";
-    final String OWM_WINDSPEED = "speed";
-    final String OWM_WIND_DIRECTION = "deg";
-    final String OWM_TEMPERATURE = "temp";
-    final String OWM_MAX = "max";
-    final String OWM_MIN = "min";
-    final String OWM_WEATHER = "weather";
-    final String OWM_DESCRIPTION = "main";
-    final String OWM_WEATHER_ID = "id";
+
+    private static final String OWM_CITY = "city";
+    private static final String OWM_CITY_NAME = "name";
+    private static final String OWM_COORD = "coord";
+    private static final String OWM_LATITUDE = "lat";
+    private static final String OWM_LONGITUDE = "lon";
+    private static final String OWM_PRESSURE = "pressure";
+    private static final String OWM_HUMIDITY = "humidity";
+    private static final String OWM_WINDSPEED = "speed";
+    private static final String OWM_WIND_DIRECTION = "deg";
+    private static final String OWM_TEMPERATURE = "temp";
+    private static final String OWM_MAX = "max";
+    private static final String OWM_MIN = "min";
+    private static final String OWM_WEATHER = "weather";
+    private static final String OWM_DESCRIPTION = "main";
+    private static final String OWM_WEATHER_ID = "id";
 
 
     private static Context mContext;
@@ -64,35 +65,26 @@ public class WeatherDataParser {
                 JSONObject cityJson = forecastJson.getJSONObject(OWM_CITY);
 
                 String cityName = cityJson.getString(OWM_CITY_NAME);
-
                 JSONObject cityCoord = cityJson.getJSONObject(OWM_COORD);
-
                 double cityLatitude = cityCoord.getDouble(OWM_LATITUDE);
                 double cityLongitude = cityCoord.getDouble(OWM_LONGITUDE);
 
                 long locationId = getOrAddLocation(locationSetting, cityName, cityLatitude, cityLongitude);
 
                 JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
-
                 int days = weatherArray.length();
 
                 Vector<ContentValues> cVVector = new Vector<ContentValues>(days);
 
                 int julianStartDay = getJulianStartDay();
-
                 Time dayTime = new Time();
-
                 long dateTime;
 
                 for(int i = 0; i < days; i++) {
-
                     JSONObject dayForecast = weatherArray.getJSONObject(i);
-
                     dateTime = dayTime.setJulianDay(julianStartDay+i);
-
                     ContentValues weatherValues =
                             parseSingleDayForecast(dayForecast, dateTime, locationId);
-
                     cVVector.add(weatherValues);
                 }
 

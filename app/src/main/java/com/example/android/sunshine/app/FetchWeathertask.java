@@ -3,33 +3,24 @@ package com.example.android.sunshine.app;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.widget.ArrayAdapter;
 
-public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
+public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
-    private ArrayAdapter<String> mForecastAdapter;
     private final Context mContext;
+    private final static int NUM_DAYS = 14;
 
-    public FetchWeatherTask(Context context, ArrayAdapter<String> forecastAdapter) {
-        mForecastAdapter = forecastAdapter;
+    public FetchWeatherTask(Context context) {
         mContext = context;
     }
 
     @Override
-    protected String[] doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
         if (params.length < 1) return null;
-        int days = 7;
         String locationSetting = params[0];
-        String urlStr = buildOpenWeatherApiUrl(locationSetting, days);
+        String urlStr = buildOpenWeatherApiUrl(locationSetting, NUM_DAYS);
         String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
-        return new WeatherDataParser(mContext).parse(forecastJsonStr, locationSetting);
-    }
-
-    @Override
-    protected void onPostExecute(String[] strings) {
-        mForecastAdapter.clear();
-        for(String s: strings) mForecastAdapter.add(s);
-        super.onPostExecute(strings);
+        new WeatherDataParser(mContext).parse(forecastJsonStr, locationSetting);
+        return null;
     }
 
     private String buildOpenWeatherApiUrl(String postcodeStr, int days) {
