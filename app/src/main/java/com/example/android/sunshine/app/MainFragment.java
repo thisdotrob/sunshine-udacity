@@ -21,9 +21,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
     private static final int FORECAST_LOADER = 0;
 
-    public final static String EXTRA_MESSAGE = "com.example.android.sunshine.app.MESSAGE";
-
-    private static final String[] FORECAST_COLUMNS = {
+    public static final String[] FORECAST_COLUMNS = {
             WeatherContract.WeatherEntry.TABLE_NAME + "." + WeatherContract.WeatherEntry._ID,
             WeatherContract.WeatherEntry.COLUMN_DATE,
             WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
