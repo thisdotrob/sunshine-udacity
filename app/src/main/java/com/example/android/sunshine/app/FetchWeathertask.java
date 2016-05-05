@@ -19,7 +19,9 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         String locationSetting = params[0];
         String urlStr = buildOpenWeatherApiUrl(locationSetting, NUM_DAYS);
         String forecastJsonStr = WeatherDataRetriever.retrieveJsonStr(urlStr);
-        new WeatherDataParser(mContext).parse(forecastJsonStr, locationSetting);
+        if (null != forecastJsonStr) {
+            new WeatherDataParser(mContext).parse(forecastJsonStr, locationSetting);
+        }
         return null;
     }
 
