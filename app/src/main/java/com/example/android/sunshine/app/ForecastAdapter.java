@@ -35,13 +35,12 @@ public class ForecastAdapter extends CursorAdapter {
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         View view = LayoutInflater.from(context).inflate(R.layout.list_item_forecast, parent, false);
-
         return view;
     }
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        TextView tv = (TextView)view;
-        tv.setText(convertCursorRowToUXFormat(cursor));
+        //TextView tv = (TextView)view;
+        //tv.setText(convertCursorRowToUXFormat(cursor));
     }
 }
