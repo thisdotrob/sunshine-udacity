@@ -99,8 +99,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             return;
         }
 
-        String dateString = Utility.formatDate(
-                cursor.getLong(COL_WEATHER_DATE));
+        String dateString = Utility.getFriendlyDayString(
+                getActivity(), cursor.getLong(COL_WEATHER_DATE));
 
         String weatherDescription =
                 cursor.getString(COL_WEATHER_DESC);
@@ -108,10 +108,10 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         boolean isMetric = Utility.isMetric(getActivity());
 
         String high = Utility.formatTemperature(
-                cursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric);
+                getActivity(), cursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric);
 
         String low = Utility.formatTemperature(
-                cursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric);
+                getActivity(), cursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric);
 
         mForecast = String.format("%s - %s - %s/%s", dateString, weatherDescription, high, low);
 

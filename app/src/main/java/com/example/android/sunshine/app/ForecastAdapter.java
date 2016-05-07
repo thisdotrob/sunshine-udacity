@@ -51,10 +51,10 @@ public class ForecastAdapter extends CursorAdapter {
         boolean isMetric = Utility.isMetric(context);
 
         viewHolder.iconView.setImageResource(R.drawable.ic_launcher);
-        viewHolder.dateView.setText(Utility.formatDate(dateInMillis));
+        viewHolder.dateView.setText(Utility.getFriendlyDayString(context, dateInMillis));
         viewHolder.descriptionView.setText(description);
-        viewHolder.highTempView.setText(Utility.formatTemperature(high, isMetric));
-        viewHolder.lowTempView.setText(Utility.formatTemperature(low, isMetric));
+        viewHolder.highTempView.setText(Utility.formatTemperature(context, high, isMetric));
+        viewHolder.lowTempView.setText(Utility.formatTemperature(context, low, isMetric));
     }
 
     @Override
