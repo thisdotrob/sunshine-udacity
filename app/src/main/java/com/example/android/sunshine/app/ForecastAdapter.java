@@ -32,30 +32,29 @@ public class ForecastAdapter extends CursorAdapter {
 
         View view = LayoutInflater.from(context).inflate(layoutId, parent, false);
 
+        ViewHolder viewHolder = new ViewHolder(view);
+        view.setTag(viewHolder);
+
         return view;
     }
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        ImageView iconView = (ImageView) view.findViewById(R.id.list_item_icon);
-        TextView dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
-        TextView forecastView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
-        TextView highView = (TextView) view.findViewById(R.id.list_item_high_textview);
-        TextView lowView = (TextView) view.findViewById(R.id.list_item_low_textview);
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
 
         int iconId = cursor.getInt(MainFragment.COL_WEATHER_ID);
         double high = cursor.getDouble(MainFragment.COL_WEATHER_MAX_TEMP);
         double low = cursor.getDouble(MainFragment.COL_WEATHER_MIN_TEMP);
-        String forecast = cursor.getString(MainFragment.COL_WEATHER_DESC);
+        String description = cursor.getString(MainFragment.COL_WEATHER_DESC);
         long dateInMillis = cursor.getLong(MainFragment.COL_WEATHER_DATE);
 
         boolean isMetric = Utility.isMetric(context);
 
-        iconView.setImageResource(R.drawable.ic_launcher);
-        dateView.setText(Utility.formatDate(dateInMillis));
-        forecastView.setText(forecast);
-        highView.setText(Utility.formatTemperature(high, isMetric));
-        lowView.setText(Utility.formatTemperature(low, isMetric));
+        viewHolder.iconView.setImageResource(R.drawable.ic_launcher);
+        viewHolder.dateView.setText(Utility.formatDate(dateInMillis));
+        viewHolder.descriptionView.setText(description);
+        viewHolder.highTempView.setText(Utility.formatTemperature(high, isMetric));
+        viewHolder.lowTempView.setText(Utility.formatTemperature(low, isMetric));
     }
 
     @Override
@@ -66,5 +65,21 @@ public class ForecastAdapter extends CursorAdapter {
     @Override
     public int getItemViewType(int position) {
         return (position == 0) ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
+    }
+
+    public static class ViewHolder {
+        public final ImageView iconView;
+        public final TextView dateView;
+        public final TextView descriptionView;
+        public final TextView highTempView;
+        public final TextView lowTempView;
+
+        public ViewHolder(View view) {
+            iconView = (ImageView) view.findViewById(R.id.list_item_icon);
+            dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
+            descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+            highTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
+            lowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
+        }
     }
 }
