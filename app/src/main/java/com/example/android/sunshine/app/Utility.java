@@ -88,4 +88,36 @@ public class Utility {
             return dayFormat.format(dateInMillis);
         }
     }
+
+    public static String getWindString(double speed, double direction) {
+
+        int speedInt = (int) Math.round(speed);
+
+        String windSpeed = "WIND: " + speedInt + " km/H";
+
+        String windDirection =
+                Utility.getWindDirectionString(direction);
+
+        return windSpeed + " " + windDirection;
+    }
+
+    public static String getWindDirectionString(double degrees) {
+        if (degrees >= 338 || degrees <= 22) {
+            return "N";
+        } else if (degrees <= 68) {
+            return "NE";
+        } else if (degrees <= 113) {
+            return "E";
+        } else if (degrees <= 158) {
+            return "SE";
+        } else if (degrees <= 203) {
+            return "S";
+        } else if (degrees <= 248) {
+            return "SW";
+        } else if (degrees <= 293) {
+            return "W";
+        } else {
+            return "NW";
+        }
+    }
 }
