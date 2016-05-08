@@ -151,6 +151,14 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         String descriptionString = cursor.getString(COL_WEATHER_DESC);
         detailDescriptionView.setText(descriptionString);
 
+        mForecast = String.format(
+                "%s - %s - %s/%s",
+                dateString,
+                descriptionString,
+                highString,
+                lowString
+        );
+
         if (mShareActionProvider != null) {
             mShareActionProvider.setShareIntent(createShareForecastIntent());
         }
