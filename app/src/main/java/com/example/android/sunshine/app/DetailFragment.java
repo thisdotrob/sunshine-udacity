@@ -104,60 +104,49 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-
         if (!cursor.moveToFirst()) {
             return;
         }
 
         boolean isMetric = Utility.isMetric(getActivity());
 
+        TextView dayView = (TextView)getView().findViewById(R.id.detail_day);
+        TextView dateView = (TextView)getView().findViewById(R.id.detail_date);
+        TextView highView = (TextView)getView().findViewById(R.id.detail_high);
+        TextView lowView = (TextView)getView().findViewById(R.id.detail_low);
+        TextView humidityView = (TextView)getView().findViewById(R.id.detail_humidty);
+        TextView windView = (TextView)getView().findViewById(R.id.detail_wind);
+        TextView pressureView = (TextView)getView().findViewById(R.id.detail_pressure);
+        TextView descriptionView = (TextView)getView().findViewById(R.id.detail_description);
+
         long dateInMillis = cursor.getLong(COL_WEATHER_DATE);
+        String dayOfWeek = Utility.getDayName(getActivity(), dateInMillis);
+        String date = Utility.getFormattedMonthDay(getActivity(), dateInMillis);
+        dayView.setText(dayOfWeek);
+        dateView.setText(date);
 
-        TextView detailDayView = (TextView)getView().findViewById(R.id.detail_day);
-        String dayString = Utility.getDayName(getActivity(), dateInMillis);
-        detailDayView.setText(dayString);
+        String description = cursor.getString(COL_WEATHER_DESC);
+        descriptionView.setText(description);
 
-        TextView detailDateView = (TextView)getView().findViewById(R.id.detail_date);
-        String dateString = Utility.getFormattedMonthDay(getActivity(), dateInMillis);
-        detailDateView.setText(dateString);
-
-        TextView detailHighView = (TextView)getView().findViewById(R.id.detail_high);
-        String highString = Utility.formatTemperature(
+        String high = Utility.formatTemperature(
                 getActivity(), cursor.getDouble(COL_WEATHER_MAX_TEMP), isMetric);
-        detailHighView.setText(highString);
+        highView.setText(high);
 
-        TextView detailLowView = (TextView)getView().findViewById(R.id.detail_low);
-        String lowString = Utility.formatTemperature(
+        String low = Utility.formatTemperature(
                 getActivity(), cursor.getDouble(COL_WEATHER_MIN_TEMP), isMetric);
-        detailLowView.setText(lowString);
+        lowView.setText(low);
 
-        TextView detailHumidityView = (TextView)getView().findViewById(R.id.detail_humidty);
-        int humidityInt = cursor.getInt(COL_WEATHER_HUMIDITY);
-        String humidityString = "HUMIDITY: " + humidityInt + "%";
-        detailHumidityView.setText(humidityString);
+        float humidity = cursor.getFloat(COL_WEATHER_HUMIDITY);
+        humidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
 
-        TextView detailWindView = (TextView)getView().findViewById(R.id.detail_wind);
-        double windDirection = cursor.getDouble(COL_WEATHER_WIND_DIRECTION);
-        double windSpeed = cursor.getDouble(COL_WEATHER_WIND_SPEED);
-        String windString = Utility.getWindString(windSpeed, windDirection);
-        detailWindView.setText(windString);
+        float windDirection = cursor.getFloat(COL_WEATHER_WIND_DIRECTION);
+        float windSpeed = cursor.getFloat(COL_WEATHER_WIND_SPEED);
+        windView.setText(Utility.getWindString(getActivity(), windSpeed, windDirection));
 
-        TextView detailPressureView = (TextView)getView().findViewById(R.id.detail_pressure);
-        int pressureDouble = (int) Math.round(cursor.getDouble(COL_WEATHER_PRESSURE));
-        String pressureString = "PRESSURE: " + pressureDouble + " hpa";
-        detailPressureView.setText(pressureString);
+        float pressure = cursor.getFloat(COL_WEATHER_PRESSURE);
+        pressureView.setText(getActivity().getString(R.string.format_pressure, pressure));
 
-        TextView detailDescriptionView = (TextView)getView().findViewById(R.id.detail_description);
-        String descriptionString = cursor.getString(COL_WEATHER_DESC);
-        detailDescriptionView.setText(descriptionString);
-
-        mForecast = String.format(
-                "%s - %s - %s/%s",
-                dateString,
-                descriptionString,
-                highString,
-                lowString
-        );
+        mForecast = String.format("%s - %s - %s/%s", date, description, high, low);
 
         if (mShareActionProvider != null) {
             mShareActionProvider.setShareIntent(createShareForecastIntent());

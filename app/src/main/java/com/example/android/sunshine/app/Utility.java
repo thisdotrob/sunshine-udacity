@@ -89,35 +89,32 @@ public class Utility {
         }
     }
 
-    public static String getWindString(double speed, double direction) {
-
-        int speedInt = (int) Math.round(speed);
-
-        String windSpeed = "WIND: " + speedInt + " km/H";
-
-        String windDirection =
-                Utility.getWindDirectionString(direction);
-
-        return windSpeed + " " + windDirection;
-    }
-
-    public static String getWindDirectionString(double degrees) {
-        if (degrees >= 338 || degrees <= 22) {
-            return "N";
-        } else if (degrees <= 68) {
-            return "NE";
-        } else if (degrees <= 113) {
-            return "E";
-        } else if (degrees <= 158) {
-            return "SE";
-        } else if (degrees <= 203) {
-            return "S";
-        } else if (degrees <= 248) {
-            return "SW";
-        } else if (degrees <= 293) {
-            return "W";
+    public static String getWindString(Context context, float windSpeed, float degrees) {
+        int windFormat;
+        if (Utility.isMetric(context)) {
+            windFormat = R.string.format_wind_kmh;
         } else {
-            return "NW";
+            windFormat = R.string.format_wind_mph;
+            windSpeed = .621371192237334f * windSpeed;
         }
+
+        String direction;
+
+        if (degrees >= 22.5 && degrees < 67.5) {
+            direction = "NE";
+        } else if (degrees >= 67.5 && degrees < 112.5) {
+            direction = "E";
+        } else if (degrees >= 112.5 && degrees < 157.5) {
+            direction = "SE";
+        } else if (degrees >= 157.5 && degrees < 202.5) {
+            direction = "S";
+        } else if (degrees >= 202.5 && degrees < 247.5) {
+            direction = "SW";
+        } else if (degrees >= 247.5 && degrees < 292.5) {
+            direction = "W";
+        } else  {
+            direction = "NW";
+        }
+        return String.format(context.getString(windFormat), windSpeed, direction);
     }
 }
